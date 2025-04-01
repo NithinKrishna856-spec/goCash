@@ -43,7 +43,7 @@ importers:
         specifier: '3'
         version: 3.4.17
       vite:
-        specifier: ^6.0.3
+        specifier: ^6.2.3
         version: 6.2.3(@types/node@22.13.14)(jiti@1.21.7)(yaml@2.7.0)
 
 packages:
