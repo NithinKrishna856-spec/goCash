@@ -1,10 +1,10 @@
 # 💰 goCa$h – Purpose
 
-## **goCa$h** is a cross-platform desktop application designed to handle **transactions** and manage **bank accounts**. It addresses key issues found with **joint accounts**, providing a secure and seamless experience. The application aims to make personal and joint account management simpler, more transparent, and more accessible to users.
+**goCa$h** is a cross-platform desktop application designed to handle **transactions** and manage **bank accounts**. It addresses key issues found with **joint accounts**, providing a secure and seamless experience. The application aims to make personal and joint account management simpler, more transparent, and more accessible to users.
 
 ## 🦀 Tauri + React – Why We Chose These Technologies??
 
-## **Tauri** is used for the native backend of the goCa$h app. It ensures that the app is lightweight and performs with maximum security. Tauri allows for full control over system resources while providing a high-performance, memory-safe environment using **Rust**.
+**Tauri** is used for the native backend of the goCa$h app. It ensures that the app is lightweight and performs with maximum security. Tauri allows for full control over system resources while providing a high-performance, memory-safe environment using **Rust**.
 
 ## 📦 Prerequisites
 
