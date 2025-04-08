@@ -23,6 +23,19 @@
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "tailwindcss": "3",
-    "vite": "^6.0.3"
-  }
+    "vite": "^6.2.3"
+  },
+  "description": "This template should help get you started developing with Tauri and React in Vite.",
+  "main": "postcss.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShravyaKudlu/goCash.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShravyaKudlu/goCash/issues"
+  },
+  "homepage": "https://github.com/ShravyaKudlu/goCash#readme"
 }
