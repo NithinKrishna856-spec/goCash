@@ -1,17 +1,17 @@
-use crate::models::Account;
-use crate::models::Transaction;
-use crate::models::User;
-use crate::websocket_pub::send_balance_update;
-use dotenv::dotenv;
-use mysql::prelude::Queryable;
-use mysql::{params, Opts, OptsBuilder, Pool, PooledConn};
+use std::{env, error::Error, panic, sync::{Arc, OnceLock}};
+
+use mysql::{params, prelude::Queryable, Opts, OptsBuilder, Pool, PooledConn};
 use rust_decimal::Decimal;
-use std::env;
-use std::error::Error;
-use std::panic;
-use std::sync::{Arc, OnceLock};
 use tokio;
-use uuid::Uuid;
+use ulid::Ulid;
+use dotenv::dotenv;
+
+use crate::models::{Account, Transaction, User};
+use crate::websocket_pub::send_balance_update;
+
+
+
+
 static DB_POOL: OnceLock<Arc<Pool>> = OnceLock::new();
 
 // InitializeDB
@@ -46,17 +46,6 @@ pub fn connect_to_db() -> Result<PooledConn, Box<dyn Error + Send + Sync>> {
 }
 
 // Fetch User
-impl mysql::prelude::FromRow for User {
-    fn from_row(row: mysql::Row) -> Self {
-        let (name, user_id): (String, String) = mysql::from_row(row);
-        User { name, user_id }
-    }
-
-    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError> {
-        let (name, user_id): (String, String) = mysql::from_row_opt(row)?;
-        Ok(User { name, user_id })
-    }
-}
 pub fn verify_user(name: &str, pass: &str) -> Result<Option<User>, Box<dyn Error + Send + Sync>> {
     let mut conn = connect_to_db()?;
     let result: Option<User> = conn.exec_first(
@@ -71,23 +60,6 @@ pub fn verify_user(name: &str, pass: &str) -> Result<Option<User>, Box<dyn Error
 }
 
 // Fetch Account
-impl mysql::prelude::FromRow for Account {
-    fn from_row(row: mysql::Row) -> Self {
-        let (account_id, balance): (String, rust_decimal::Decimal) = mysql::from_row(row);
-        Account {
-            account_id,
-            balance,
-        }
-    }
-
-    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError> {
-        let (account_id, balance): (String, rust_decimal::Decimal) = mysql::from_row_opt(row)?;
-        Ok(Account {
-            account_id,
-            balance,
-        })
-    }
-}
 pub fn fetch_balance(user_id: &str) -> Result<Option<Account>, Box<dyn Error + Send + Sync>> {
     let mut conn = connect_to_db()?;
     let result: Option<Account> = conn.exec_first(
@@ -98,9 +70,18 @@ pub fn fetch_balance(user_id: &str) -> Result<Option<Account>, Box<dyn Error + S
     Ok(result)
 }
 
-//Generate a new Transaction ID
-fn generate_transaction_id() -> String {
-    Uuid::new_v4().to_string()[..6].to_string()
+//Fetch Transaction
+pub fn fetch_transaction(
+    conn: &mut PooledConn,
+    transaction_id: &str,
+) -> Result<Transaction, Box<dyn Error + Send + Sync>> {
+    let transaction: Option<Transaction> = conn.exec_first(
+        r"SELECT transaction_id, account_id, user_id, transaction_type, amount, transaction_date 
+        FROM transactions WHERE transaction_id = :transaction_id",
+        params! { "transaction_id" => transaction_id },
+    )?;
+
+    transaction.ok_or_else(|| "Transaction not found".into())
 }
 
 // Update Account Balance
@@ -131,55 +112,13 @@ fn update_account_balance(
     Ok(())
 }
 
-//Fetch Transaction
-impl mysql::prelude::FromRow for Transaction {
-    fn from_row(row: mysql::Row) -> Self {
-        let (transaction_id, account_id, user_id, transaction_type, amount, transaction_date): (
-            String,
-            String,
-            String,
-            String,
-            rust_decimal::Decimal,
-            chrono::NaiveDateTime,
-        ) = mysql::from_row(row);
 
-        Transaction {
-            transaction_id,
-            account_id,
-            user_id,
-            transaction_type,
-            amount,
-            transaction_date,
-        }
-    }
-
-    fn from_row_opt(row: mysql::Row) -> Result<Self, mysql::FromRowError> {
-        let (transaction_id, account_id, user_id, transaction_type, amount, transaction_date) =
-            mysql::from_row_opt(row)?;
-        Ok(Transaction {
-            transaction_id,
-            account_id,
-            user_id,
-            transaction_type,
-            amount,
-            transaction_date,
-        })
-    }
+//Generate a new Transaction ID
+fn generate_transaction_id() -> String {
+    Ulid::new().to_string()
 }
-pub fn fetch_transaction(
-    conn: &mut PooledConn,
-    transaction_id: &str,
-) -> Result<Transaction, Box<dyn Error + Send + Sync>> {
-    let transaction: Option<Transaction> = conn.exec_first(
-        r"SELECT transaction_id, account_id, user_id, transaction_type, amount, transaction_date 
-        FROM transactions WHERE transaction_id = :transaction_id",
-        params! { "transaction_id" => transaction_id },
-    )?;
 
-    transaction.ok_or_else(|| "Transaction not found".into())
-}
 //Insert Transaction
-
 pub fn insert_transaction(
     conn: &mut PooledConn,
     account_id: &str,
@@ -187,20 +126,20 @@ pub fn insert_transaction(
     amount: Decimal,
     transaction_type: &str,
 ) -> Result<Transaction, Box<dyn Error + Send + Sync>> {
+    
     // Fetch Account Balance for the User
-    let account = fetch_balance(user_id)?;
-    let account = match account {
-        Some(account) => account,
-        None => return Err("Account not found".into()),
-    };
+    let balance = fetch_balance(user_id)?
+    .ok_or("Account not found before update")?
+    .balance;
 
-    if transaction_type == "withdrawal" && account.balance < amount {
+    // if transaction is withdrawal, check balance
+    if transaction_type == "withdrawal" && balance < amount {
         return Err("Insufficient funds for withdrawal".into());
     }
 
     let transaction_id = generate_transaction_id();
 
-    // ✅ Ensure transaction_date is stored
+    // query to execute transaction
     conn.exec_drop(
         r"INSERT INTO transactions (transaction_id, account_id, user_id, transaction_type, amount, transaction_date) 
         VALUES (:transaction_id, :account_id, :user_id, :transaction_type, :amount, CURRENT_TIMESTAMP)",
@@ -213,14 +152,18 @@ pub fn insert_transaction(
         },
     )?;
 
+    // Update Balance
     update_account_balance(conn, account_id, amount, transaction_type)?;
     // Fetch the updated balance after the update
-    let updated_account = fetch_balance(user_id)?;
-    let updated_balance = match updated_account {
-        Some(account) => account.balance,
-        None => return Err("Account not found after update".into()),
-    };
+    let updated_balance = fetch_balance(user_id)?
+    .ok_or("Account not found after update")?
+    .balance;
+
+    // fetch Transaction
     let transaction = fetch_transaction(conn, &transaction_id)?;
+    
+
+    // publish to channel send_balance_update(ably)
     let account_id_cloned = account_id.to_string();
     tokio::spawn(async move {
         let result = panic::catch_unwind(|| {

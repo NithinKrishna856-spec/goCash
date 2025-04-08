@@ -1,67 +1,78 @@
 import { useState } from "react";
 import Modal from "./Modal";
-
 import { useTransaction } from "../hooks/use-trasactions";
 
 function Deposit({ account, user, onTransactionComplete }) {
   const [showModal, setShowModal] = useState(false);
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [error, setError] = useState(null);
 
   const handleSetAmount = (event) => {
-    const value = parseFloat(event.target.value);
+    const value = event.target.value;
     setAmount(value);
   };
-  const handleModel = (event) => {
+
+  const handleModalToggle = (event) => {
     event.preventDefault();
     setShowModal(!showModal);
   };
-  const handleModelClose = () => {
-    setAmount(0);
+
+  const handleCloseModal = () => {
+    setAmount("");
     setError(null);
     setShowModal(false);
   };
-  const handleClose = async (event) => {
+
+  const handleDeposit = async (event) => {
     event.preventDefault();
 
     if (isNaN(amount) || amount <= 0) {
       setError("Please enter a valid amount greater than zero.");
-      setAmount(0);
+      setAmount("");
       return;
     }
-    if (!account || !account.account_id) {
-      setError("Account information is missing. Please try again.");
+
+    if (!account?.account_id || !user?.user_id) {
+      setError("Account or user information is missing. Please try again.");
       return;
     }
 
     const account_id = account.account_id;
-    const user_id = user?.user_id;
+    const user_id = user.user_id;
     const transaction_type = "deposit";
 
-    const result = await useTransaction(
-      account_id,
-      user_id,
-      amount,
-      transaction_type
-    );
-    if (result && onTransactionComplete) {
-      onTransactionComplete(result);
+    try {
+      const result = await useTransaction(
+        account_id,
+        user_id,
+        parseFloat(amount),
+        transaction_type
+      );
+      if (result && onTransactionComplete) {
+        onTransactionComplete(result);
+      }
+      handleCloseModal(); // Close the modal after the transaction is complete
+    } catch (error) {
+      setError("Transaction failed. Please try again.");
     }
-    setAmount(0);
-    setShowModal(false);
   };
+
+  const isAmountValid = !isNaN(amount) && amount > 0;
 
   const DepositButton = (
     <div className="flex justify-end space-x-4">
       <button
         className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-        onClick={handleModelClose}
+        onClick={handleCloseModal}
       >
         Close
       </button>
       <button
-        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        onClick={handleClose}
+        className={`bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ${
+          !isAmountValid ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        onClick={handleDeposit}
+        disabled={!isAmountValid}
       >
         Deposit
       </button>
@@ -69,8 +80,8 @@ function Deposit({ account, user, onTransactionComplete }) {
   );
 
   const modelDeposit = (
-    <Modal onClose={handleClose} actionBar={DepositButton}>
-      <form onSubmit={handleClose} className="p-4 space-y-4">
+    <Modal onClose={handleCloseModal} actionBar={DepositButton}>
+      <form onSubmit={handleDeposit} className="p-4 space-y-4">
         <label className="block text-gray-300 font-bold mb-2">
           Enter amount you want to Deposit $
         </label>
@@ -89,7 +100,7 @@ function Deposit({ account, user, onTransactionComplete }) {
   return (
     <div>
       <button
-        onClick={handleModel}
+        onClick={handleModalToggle}
         className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
       >
         Deposit

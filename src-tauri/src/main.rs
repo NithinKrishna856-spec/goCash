@@ -4,7 +4,5 @@
 
 
 fn main() {
-
-
     gocash_lib::run()
 }

@@ -1,9 +1,9 @@
 mod db;
 mod models;
 mod websocket_pub;
-use crate::models::Account;
-use crate::models::Transaction;
-use crate::models::User;
+mod sql_from_row_imps;
+use crate::models::{Account, Transaction, User};
+
 
 // Login
 #[tauri::command]
@@ -57,11 +57,8 @@ fn transaction(
         Err(err) => Err(format!("Error in Transaction: {}", err)),
     }
 }
-#[tauri::command]
-fn get_websocket_sub_api_key() -> String {
-    std::env::var("REACT_APP_ABLY_API_KEY").unwrap_or_else(|_| "default-api-key".to_string())
-}
 
+// app starts
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
@@ -71,11 +68,9 @@ pub fn run() {
             .invoke_handler(tauri::generate_handler![
                 login,
                 account,
-                get_websocket_sub_api_key,
                 transaction
             ])
             .setup(|_app| {
-                // Perform any setup tasks here
                 Ok(())
             })
             .run(tauri::generate_context!())

@@ -1,4 +1,4 @@
-use base64::{engine::general_purpose, Engine as _}; // Correct import for Base64
+use base64::{engine::general_purpose, Engine as _}; 
 use dotenv::dotenv;
 use reqwest::Client;
 use serde_json::json;
@@ -46,7 +46,7 @@ pub async fn send_balance_update(
 
     // Handle the response
     if status.is_success() {
-        println!("Message sent successfully.");
+        println!("Message published successfully.");
     } else {
         println!("Failed to send message: {} - {}", status, error_text);
     }

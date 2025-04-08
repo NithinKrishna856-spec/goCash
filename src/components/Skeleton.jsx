@@ -4,7 +4,7 @@ function Skeleton({ times, className }) {
   const outerClassNames = classNames(
     "relative",
     "overflow-hidden",
-    "bg-green-700", // Changed to a darker green for dark theme
+    "bg-green-700",
     "rounded",
     "mb-2.5",
     className
@@ -15,9 +15,9 @@ function Skeleton({ times, className }) {
     "inset-0",
     "-translate-x-full",
     "bg-gradient-to-r",
-    "from-green-700", // Adjusted to match the darker green
-    "via-green-800", // Darker gradient for dark theme
-    "to-green-700" // Adjusted to match the darker green
+    "from-green-700",
+    "via-green-800",
+    "to-green-700"
   );
   const boxes = Array(times)
     .fill(0)

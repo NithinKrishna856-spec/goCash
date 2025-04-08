@@ -35,14 +35,17 @@ function Dashboard({ onLogOut, user }) {
     fetchAccountDetails();
   }, [user.user_id]);
 
-  useWebSocketSub(setAccount, setLoading);
+  useWebSocketSub((updatedBalance) => {
+    setAccount((prev) => ({ ...prev, balance: updatedBalance.balance }));
+  });
 
   const handleLogout = () => {
     onLogOut();
   };
+
   const handleTransactionComplete = (result) => {
     setTransaction([...transaction, result]);
-    // fetchAccountDetails();
+    fetchAccountDetails();
   };
 
   return (

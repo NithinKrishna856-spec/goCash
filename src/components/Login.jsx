@@ -11,18 +11,11 @@ function Login({ onLogIn }) {
     if (user) {
       onLogIn(user);
     } else {
-      // Display an alert with better styling
       const alertBox = document.createElement("div");
       alertBox.textContent = "Invalid credentials. Please try again.";
-      alertBox.style.position = "fixed";
-      alertBox.style.top = "20px";
-      alertBox.style.right = "20px";
-      alertBox.style.backgroundColor = "#f44336";
-      alertBox.style.color = "#fff";
-      alertBox.style.padding = "10px 20px";
-      alertBox.style.borderRadius = "5px";
-      alertBox.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
-      alertBox.style.zIndex = "1000";
+      alertBox.className =
+        "fixed top-5 right-5 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50";
+
       document.body.appendChild(alertBox);
 
       setTimeout(() => {
