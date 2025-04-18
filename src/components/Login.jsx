@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-
+import CustomAlert from "./CustomAlert";
 function Login({ onLogIn }) {
   const [name, setName] = useState("");
   const [pass, setPass] = useState("");
+  const [error, setError] = useState(null);
 
   async function login() {
     const user = await invoke("login", { name, pass });
@@ -11,18 +12,16 @@ function Login({ onLogIn }) {
     if (user) {
       onLogIn(user);
     } else {
-      const alertBox = document.createElement("div");
-      alertBox.textContent = "Invalid credentials. Please try again.";
-      alertBox.className =
-        "fixed top-5 right-5 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50";
-
-      document.body.appendChild(alertBox);
-
-      setTimeout(() => {
-        document.body.removeChild(alertBox);
-      }, 3000);
+      setError({
+        message: "Invalid credentials. Please try again.",
+        type: "error",
+      });
     }
   }
+
+  const handleCloseError = () => {
+    setError(null);
+  };
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-800 to-gray-900">
@@ -65,6 +64,15 @@ function Login({ onLogIn }) {
           Login
         </button>
       </form>
+
+      {/* Display CustomAlert if error exists */}
+      {error && (
+        <CustomAlert
+          message={error.message}
+          type={error.type}
+          onClose={handleCloseError}
+        />
+      )}
     </main>
   );
 }

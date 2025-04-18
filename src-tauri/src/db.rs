@@ -1,16 +1,18 @@
-use std::{env, error::Error, panic, sync::{Arc, OnceLock}};
+use std::{
+    env,
+    error::Error,
+    panic,
+    sync::{Arc, OnceLock},
+};
 
+use dotenv::dotenv;
 use mysql::{params, prelude::Queryable, Opts, OptsBuilder, Pool, PooledConn};
 use rust_decimal::Decimal;
 use tokio;
 use ulid::Ulid;
-use dotenv::dotenv;
 
 use crate::models::{Account, Transaction, User};
 use crate::websocket_pub::send_balance_update;
-
-
-
 
 static DB_POOL: OnceLock<Arc<Pool>> = OnceLock::new();
 
@@ -112,7 +114,6 @@ fn update_account_balance(
     Ok(())
 }
 
-
 //Generate a new Transaction ID
 fn generate_transaction_id() -> String {
     Ulid::new().to_string()
@@ -126,11 +127,10 @@ pub fn insert_transaction(
     amount: Decimal,
     transaction_type: &str,
 ) -> Result<Transaction, Box<dyn Error + Send + Sync>> {
-    
     // Fetch Account Balance for the User
     let balance = fetch_balance(user_id)?
-    .ok_or("Account not found before update")?
-    .balance;
+        .ok_or("Account not found before update")?
+        .balance;
 
     // if transaction is withdrawal, check balance
     if transaction_type == "withdrawal" && balance < amount {
@@ -156,21 +156,21 @@ pub fn insert_transaction(
     update_account_balance(conn, account_id, amount, transaction_type)?;
     // Fetch the updated balance after the update
     let updated_balance = fetch_balance(user_id)?
-    .ok_or("Account not found after update")?
-    .balance;
+        .ok_or("Account not found after update")?
+        .balance;
 
     // fetch Transaction
     let transaction = fetch_transaction(conn, &transaction_id)?;
-    
 
     // publish to channel send_balance_update(ably)
     let account_id_cloned = account_id.to_string();
+    let user_id_cloned = user_id.to_string();
     tokio::spawn(async move {
         let result = panic::catch_unwind(|| {
             // Synchronous closure, no async code here
             async {
                 // The async block now returns a Result type
-                send_balance_update(&account_id_cloned, updated_balance).await
+                send_balance_update(&account_id_cloned, updated_balance, &user_id_cloned).await
             }
         });
 

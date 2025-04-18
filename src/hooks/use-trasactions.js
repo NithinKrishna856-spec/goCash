@@ -9,10 +9,10 @@ async function useTransaction(account_id, user_id, amount, transaction_type) {
       transactionType: transaction_type,
     });
 
-    return transaction ?? null;
+    return { transaction, error: null };
   } catch (error) {
-    console.error("Transaction failed:", error);
-    return null;
+    // console.error("Transaction failed:", error);
+    return { transaction: null, error };
   }
 }
 

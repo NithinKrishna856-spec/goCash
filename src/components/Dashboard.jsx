@@ -5,18 +5,21 @@ import Withdraw from "./Withdraw";
 import Deposit from "./Deposit";
 import History from "./History";
 import useWebSocketSub from "../hooks/use-websocket-sub";
+import CustomAlert from "./CustomAlert";
 
 function Dashboard({ onLogOut, user }) {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [transaction, setTransaction] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [type, setType] = useState("success");
 
   const fetchAccountDetails = async () => {
     try {
       setLoading(true);
 
       // DEV ONLY!!!!!!!!
-      //await new Promise((resolve) => setTimeout(resolve, 3000));
+      // await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const accountDetails = await invoke("account", {
         userId: user.user_id,
@@ -34,17 +37,49 @@ function Dashboard({ onLogOut, user }) {
     fetchAccountDetails();
   }, [user.user_id]);
 
-  useWebSocketSub((updatedBalance) => {
-    setAccount((prev) => ({ ...prev, balance: updatedBalance.balance }));
-  });
+  const onAccountUpdate = (updatedBalance) => {
+    if (updatedBalance.user_id !== user.user_id) {
+      setType("info");
+      setSuccessMessage("Updated by Other user");
+      setAccount((prev) => ({ ...prev, balance: updatedBalance.balance }));
+    }
+  };
+
+  useWebSocketSub(onAccountUpdate, user);
 
   const handleLogout = () => {
     onLogOut();
   };
 
   const handleTransactionComplete = (result) => {
+<<<<<<< HEAD
     setTransaction([...transaction, result]);
     // fetchAccountDetails();
+=======
+    if (!result) {
+      console.log("Error message received:", result);
+      return;
+    } else {
+      setTransactions([...transactions, result]);
+
+      const transactionType = result.transaction_type;
+      const transactionAmount = result.amount;
+      console.log(transactionAmount, transactionType);
+
+      let message = "";
+      if (transactionType === "deposit") {
+        message = `Deposit of $${transactionAmount} was successful!`;
+      } else if (transactionType === "withdrawal") {
+        message = `Withdrawal of $${transactionAmount} was successful!`;
+      } else {
+        message = "Transaction successful!";
+      }
+
+      setSuccessMessage(message);
+      setType("success");
+      fetchAccountDetails();
+    }
+>>>>>>> upstream/main
   };
 
   return (
@@ -94,9 +129,17 @@ function Dashboard({ onLogOut, user }) {
           user={user}
           onTransactionComplete={handleTransactionComplete}
         />
-        <History transaction={transaction} />
+        <History transaction={transactions} />
         <Transfer />
       </div>
+
+      {successMessage && (
+        <CustomAlert
+          message={successMessage}
+          type={type}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
     </div>
   );
 }

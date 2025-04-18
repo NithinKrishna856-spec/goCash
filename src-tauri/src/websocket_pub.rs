@@ -1,4 +1,4 @@
-use base64::{engine::general_purpose, Engine as _}; 
+use base64::{engine::general_purpose, Engine as _};
 use dotenv::dotenv;
 use reqwest::Client;
 use serde_json::json;
@@ -7,6 +7,7 @@ use std::env;
 pub async fn send_balance_update(
     account_id: &str,
     balance: rust_decimal::Decimal,
+    user_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
@@ -24,7 +25,8 @@ pub async fn send_balance_update(
         "name": "update_balance",
         "data": {
             "account_id": account_id,
-            "balance": balance
+            "balance": balance,
+            "user_id": user_id
         }
     });
 
