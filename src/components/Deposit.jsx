@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal from "./Modal";
 import { useTransaction } from "../hooks/use-trasactions";
-
+import CustomAlert from "./CustomAlert";
 function Deposit({ account, user, onTransactionComplete }) {
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState("");
@@ -37,23 +37,19 @@ function Deposit({ account, user, onTransactionComplete }) {
       return;
     }
 
-    const account_id = account.account_id;
-    const user_id = user.user_id;
-    const transaction_type = "deposit";
+    const { transaction, error: txError } = await useTransaction(
+      account.account_id,
+      user.user_id,
+      parseFloat(amount),
+      "deposit"
+    );
 
-    try {
-      const result = await useTransaction(
-        account_id,
-        user_id,
-        parseFloat(amount),
-        transaction_type
-      );
-      if (result && onTransactionComplete) {
-        onTransactionComplete(result);
-      }
-      handleCloseModal(); // Close the modal after the transaction is complete
-    } catch (error) {
-      setError("Transaction failed. Please try again.");
+    if (transaction) {
+      onTransactionComplete?.(transaction);
+      handleCloseModal();
+    } else {
+      // console.error(txError);
+      setError(txError || "Transaction failed. Please try again.");
     }
   };
 
@@ -93,7 +89,6 @@ function Deposit({ account, user, onTransactionComplete }) {
           className="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </form>
-      {error && <p className="text-red-500 p-4 space-y-4 text-sm">{error}</p>}
     </Modal>
   );
 
@@ -106,6 +101,13 @@ function Deposit({ account, user, onTransactionComplete }) {
         Deposit
       </button>
       {showModal && modelDeposit}
+      {error && (
+        <CustomAlert
+          message={error}
+          type="error"
+          onClose={() => setError(null)}
+        />
+      )}
     </div>
   );
 }
