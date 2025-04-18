@@ -11,6 +11,7 @@ const useWebSocketSub = (onAccountUpdate) => {
 
       channel.subscribe("update_balance", (message) => {
         const { account_id, balance } = message.data;
+        console.log("message recived"+ message.data);
         onAccountUpdate({ account_id, balance });
       });
       return () => {

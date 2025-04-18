@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Skeleton from "./Skeleton";
 import Withdraw from "./Withdraw";
 import Deposit from "./Deposit";
-import Transfer from "./Transfer";
 import History from "./History";
 import useWebSocketSub from "../hooks/use-websocket-sub";
 
@@ -17,7 +16,7 @@ function Dashboard({ onLogOut, user }) {
       setLoading(true);
 
       // DEV ONLY!!!!!!!!
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      //await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const accountDetails = await invoke("account", {
         userId: user.user_id,
@@ -45,7 +44,7 @@ function Dashboard({ onLogOut, user }) {
 
   const handleTransactionComplete = (result) => {
     setTransaction([...transaction, result]);
-    fetchAccountDetails();
+    // fetchAccountDetails();
   };
 
   return (
