@@ -125,6 +125,7 @@ function Dashboard({ onLogOut, user }) {
           onTransactionComplete={handleTransactionComplete}
         />
         <History transaction={transactions} />
+        {/* <Transfer /> */}
       </div>
 
       {successMessage && (
