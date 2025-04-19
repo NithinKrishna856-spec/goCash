@@ -23,15 +23,16 @@ function CustomAlert({ message, type, onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000);
+    }, 10000);
 
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <div
-      className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg ${alertColor} text-white z-50`}
-    >
+  className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 rounded-lg shadow-lg ${alertColor} text-white z-50`}
+>
+
       <div className="flex justify-between items-center">
         <p>{message}</p>
         <button

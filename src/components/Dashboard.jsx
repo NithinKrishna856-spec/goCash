@@ -52,10 +52,6 @@ function Dashboard({ onLogOut, user }) {
   };
 
   const handleTransactionComplete = (result) => {
-<<<<<<< HEAD
-    setTransaction([...transaction, result]);
-    // fetchAccountDetails();
-=======
     if (!result) {
       console.log("Error message received:", result);
       return;
@@ -79,7 +75,6 @@ function Dashboard({ onLogOut, user }) {
       setType("success");
       fetchAccountDetails();
     }
->>>>>>> upstream/main
   };
 
   return (
@@ -130,7 +125,6 @@ function Dashboard({ onLogOut, user }) {
           onTransactionComplete={handleTransactionComplete}
         />
         <History transaction={transactions} />
-        <Transfer />
       </div>
 
       {successMessage && (
