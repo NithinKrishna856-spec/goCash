@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Skeleton from "./Skeleton";
 import Withdraw from "./Withdraw";
 import Deposit from "./Deposit";
-import Transfer from "./Transfer";
 import History from "./History";
 import useWebSocketSub from "../hooks/use-websocket-sub";
 import CustomAlert from "./CustomAlert";
@@ -126,7 +125,7 @@ function Dashboard({ onLogOut, user }) {
           onTransactionComplete={handleTransactionComplete}
         />
         <History transaction={transactions} />
-        <Transfer />
+        {/* <Transfer /> */}
       </div>
 
       {successMessage && (
